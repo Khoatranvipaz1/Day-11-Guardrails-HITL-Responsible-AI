@@ -12,6 +12,7 @@ Usage:
 import sys
 import asyncio
 import argparse
+import logging
 
 from core.config import setup_api_key
 
@@ -21,6 +22,8 @@ def _configure_console():
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
+    # ADK logs full exception chains before callers can handle quota errors.
+    logging.getLogger("google.adk").setLevel(logging.CRITICAL)
 
 
 async def part1_attacks():
@@ -29,20 +32,38 @@ async def part1_attacks():
     print("PART 1: Attack Unprotected Agent")
     print("=" * 60)
 
-    from agents.agent import create_unsafe_agent, test_agent
-    from attacks.attacks import run_attacks, generate_ai_attacks
+    from agents.agent import create_unsafe_agent
+    from attacks.attacks import (
+        check_gemini_access,
+        generate_ai_attacks,
+        run_attacks,
+    )
 
-    # Create and test the unsafe agent
-    agent, runner = create_unsafe_agent()
-    await test_agent(agent, runner)
+    # Probe quota without creating ADK background tasks that emit long traces.
+    api_available, status = check_gemini_access()
+    quota_exhausted = not api_available
+    if api_available:
+        print(f"Gemini API check: {status}")
+        agent, runner = create_unsafe_agent()
+    else:
+        print(f"Gemini API check failed: {status}")
+        agent = runner = None
 
     # TODO 1: Run manual adversarial prompts
     print("\n--- Running manual attacks (TODO 1) ---")
-    results = await run_attacks(agent, runner)
+    if quota_exhausted:
+        print("Manual online attacks skipped because Gemini quota is exhausted.")
+        results = []
+    else:
+        results = await run_attacks(agent, runner)
+        quota_exhausted = any(
+            "quota exhausted" in result.get("response", "").lower()
+            for result in results
+        )
 
     # TODO 2: Generate AI attack test cases
     print("\n--- Generating AI attacks (TODO 2) ---")
-    ai_attacks = await generate_ai_attacks()
+    ai_attacks = await generate_ai_attacks(force_fallback=quota_exhausted)
 
     return results
 
@@ -159,6 +180,8 @@ async def main(parts=None):
 
 if __name__ == "__main__":
     _configure_console()
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     parser = argparse.ArgumentParser(
         description="Lab 11: Guardrails, HITL & Responsible AI"
     )

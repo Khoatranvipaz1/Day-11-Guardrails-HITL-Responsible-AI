@@ -1,5 +1,9 @@
 # Day 11 - Security Test Report
 
+**Student:** Trần Văn Khoa
+
+**Student ID:** 2A202600827
+
 ## Pipeline
 
 `Rate limiter -> Input guardrails -> Model -> Output redaction -> Multi-criteria judge -> Audit and monitoring`
@@ -12,7 +16,7 @@
 | Assignment attacks | 7 blocked | 7/7 blocked |
 | Rapid requests | 10 pass, 5 blocked | 10 passed, 5 blocked |
 | Edge cases | 5 blocked | 5/5 blocked |
-| Unit tests | All pass | 8/8 passed |
+| Unit tests | All pass | 9/9 passed |
 
 The 32 audit records produced a 53.1% block rate and five rate-limit hits.
 Monitoring correctly emitted high-block-rate and rate-limit-spike alerts.

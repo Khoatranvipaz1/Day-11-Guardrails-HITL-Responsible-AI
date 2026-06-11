@@ -1,5 +1,9 @@
 # Assignment 11 - Individual Report
 
+**Student:** Trần Văn Khoa
+
+**Student ID:** 2A202600827
+
 **Course:** AICB-P1 - AI Agent Development
 
 **Assignment:** Production Defense-in-Depth Pipeline

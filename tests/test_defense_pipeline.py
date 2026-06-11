@@ -13,6 +13,8 @@ from defense_pipeline import (  # noqa: E402
     SlidingWindowRateLimiter,
 )
 from hitl.hitl import ConfidenceRouter  # noqa: E402
+from core.utils import concise_api_error, is_quota_error  # noqa: E402
+from attacks.attacks import FALLBACK_AI_ATTACKS  # noqa: E402
 
 
 class FakeClock:
@@ -109,6 +111,13 @@ class DefensePipelineTests(unittest.TestCase):
         self.assertTrue(router.route("Transfer", 0.99, "transfer_money").requires_human)
         self.assertEqual(router.route("Unknown", 0.4).action, "escalate")
         self.assertEqual(router.route("Known", 0.95).action, "auto_send")
+
+    def test_quota_errors_are_reported_concisely(self):
+        """Gemini 429 failures should not dump full SDK tracebacks to users."""
+        error = RuntimeError("429 RESOURCE_EXHAUSTED: quota exceeded")
+        self.assertTrue(is_quota_error(error))
+        self.assertIn("quota exhausted", concise_api_error(error).lower())
+        self.assertEqual(len(FALLBACK_AI_ATTACKS), 5)
 
 
 if __name__ == "__main__":
