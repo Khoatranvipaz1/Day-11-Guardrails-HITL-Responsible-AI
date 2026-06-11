@@ -16,6 +16,13 @@ import argparse
 from core.config import setup_api_key
 
 
+def _configure_console():
+    """Use UTF-8 so Vietnamese model responses print correctly on Windows."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 async def part1_attacks():
     """Part 1: Attack an unprotected agent."""
     print("\n" + "=" * 60)
@@ -151,6 +158,7 @@ async def main(parts=None):
 
 
 if __name__ == "__main__":
+    _configure_console()
     parser = argparse.ArgumentParser(
         description="Lab 11: Guardrails, HITL & Responsible AI"
     )

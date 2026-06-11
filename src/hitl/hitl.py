@@ -84,13 +84,24 @@ class ConfidenceRouter:
         #      action="escalate", priority="high",
         #      requires_human=True, reason="Low confidence — escalating"
 
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError("confidence must be between 0.0 and 1.0")
+        if action_type in HIGH_RISK_ACTIONS:
+            return RoutingDecision(
+                "escalate", confidence, f"High-risk action: {action_type}", "high", True
+            )
+        if confidence >= self.HIGH_THRESHOLD:
+            return RoutingDecision(
+                "auto_send", confidence, "High confidence", "low", False
+            )
+        if confidence >= self.MEDIUM_THRESHOLD:
+            return RoutingDecision(
+                "queue_review", confidence, "Medium confidence - needs review",
+                "normal", True
+            )
         return RoutingDecision(
-            action="auto_send",
-            confidence=confidence,
-            reason="TODO: implement routing logic",
-            priority="low",
-            requires_human=False,
-        )  # TODO: Replace with implementation
+            "escalate", confidence, "Low confidence - escalating", "high", True
+        )
 
 
 # ============================================================
@@ -109,27 +120,27 @@ class ConfidenceRouter:
 hitl_decision_points = [
     {
         "id": 1,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "High-value transaction approval",
+        "trigger": "A transfer exceeds 50,000,000 VND or targets a new beneficiary.",
+        "hitl_model": "human-in-the-loop",
+        "context_needed": "Customer verification, amount, beneficiary, fraud score, and recent activity.",
+        "example": "A customer requests a 120,000,000 VND transfer to a newly added account.",
     },
     {
         "id": 2,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Fraud or account-takeover alert",
+        "trigger": "Risk systems detect unusual location, device, velocity, or repeated failed authentication.",
+        "hitl_model": "human-on-the-loop",
+        "context_needed": "Device history, login geography, transaction timeline, and model explanation.",
+        "example": "A new overseas device attempts three transfers minutes after a password reset.",
     },
     {
         "id": 3,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Policy ambiguity and customer dispute",
+        "trigger": "The agent has medium confidence or policy and retrieved evidence conflict.",
+        "hitl_model": "human-as-tiebreaker",
+        "context_needed": "Conversation, cited policy versions, retrieved evidence, confidence, and proposed reply.",
+        "example": "A fee reversal request is eligible under one policy document but excluded by another.",
     },
 ]
 

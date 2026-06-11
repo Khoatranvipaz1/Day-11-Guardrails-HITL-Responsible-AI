@@ -73,10 +73,10 @@ python main.py --part 3    # Part 3: Testing pipeline
 python main.py --part 4    # Part 4: HITL design
 
 # Or test individual modules
-python guardrails/input_guardrails.py
-python guardrails/output_guardrails.py
-python testing/testing.py
-python hitl/hitl.py
+python -m guardrails.input_guardrails
+python -m guardrails.output_guardrails
+python -m testing.testing
+python -m hitl.hitl
 ```
 
 ### Tools Used
@@ -100,6 +100,22 @@ python hitl/hitl.py
 
 1. **Security Report**: Before/after comparison of 5+ attacks (ADK + NeMo)
 2. **HITL Flowchart**: 3 decision points with escalation paths
+
+Completed assignment artifacts:
+
+- `src/defense_pipeline.py` - offline production defense pipeline
+- `tests/test_defense_pipeline.py` - deterministic security tests
+- `artifacts/security_audit.json` - exported interaction audit
+- `artifacts/REPORT.md` - 1-2 page individual report answering all 5 rubric questions
+- `artifacts/SECURITY_REPORT.md` - before/after tests and technical evidence
+- `artifacts/HITL_FLOWCHART.md` - 3 decision points and escalation paths
+
+Run the completed offline assignment:
+
+```bash
+python src/defense_pipeline.py
+python -m unittest discover -s tests -v
+```
 
 ## 13 TODOs
 
